@@ -28,13 +28,13 @@ type Author struct {
 books := []Book
 
 //Get all books 
-func getBooks(w http.ResponseWriter, r *http,Request) {
+func getBooks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(books)
 }
 
 //Get a single book 
-func getBook(w http.ResponseWriter, r *http,Request) {
+func getBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r) //Get params 
 	//Loop through the books and find the one with the ID from the params 
@@ -47,7 +47,7 @@ func getBook(w http.ResponseWriter, r *http,Request) {
 }
 
 //Add new book 
-func addNewBook(w http.ResponseWriter, r *http,Request) {
+func addNewBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var book Book
 	_ = json.NewDecoder(r.Body).Decode($book)
@@ -57,17 +57,48 @@ func addNewBook(w http.ResponseWriter, r *http,Request) {
 }
 
 //Update book 
-func updateBook(w http.ResponseWriter, r *http,Request) {
+func updateBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params :- mux.Vars(r)
 	for index, item := range books {
 		if item.ID == params["id"] {
 			books = append(books[:index], books[index + 1:]...)
-			var book Book_ = json.NewDecoder(r.Body).Decode(&book)
+			var book Book = json.NewDecoder(r.Body).Decode(&book)
 			book.ID = params["id"]
 			books = append(books, book)
 			json.NewEncoder(w).Encode(book)
 			return
 		}
 	}
+}
+
+//Delete book 
+func deleteBook (w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	for index, item := range books {
+		if item.ID == params["id"] {
+			books - append(books[:index], books[index+1:])
+			break
+		}
+	}
+}
+
+//Main 
+func main() {
+	r = mux.NewRouter()
+
+	//Add data to the books database 
+	books = append(books, Book{ID: "1", Isbn: "438227", Title: "Book One", Author: &Author{Firstname: "John", Lastname: "Doe"}})
+	books = append(books, Book{ID: "2", Isbn: "454555", Title: "Book Two", Author: &Author{Firstname: "Steve", Lastname: "Smith"}})
+
+	//Route handles and endpoints 
+	r.HandleFunc("/books", getBooks).methods("GET")
+	r.HandleFunc("/books/{id}", getBooks).methods("GET")
+	r.HandleFunc("/books", addNewBook).methods("POST")
+	r.HandleFunc("/books/{id}", updateBook).methods("PUT")
+	r.HandleFunc("/books", getBooks).methods("GET")
+
+	//Start server 
+	log.Fatal(http.ListenAndServe(":8000", r))
 }
